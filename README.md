@@ -34,4 +34,4 @@ Modules, in text, will be represented with a bar `|` and absence of modules with
 
 ## Bonus
 
-Actually generate a PNG image of the barcode, remember the quiet space!
+Actually generate a PNG image of the barcode, remember the quiet zone! (Barcodes are introverts)
