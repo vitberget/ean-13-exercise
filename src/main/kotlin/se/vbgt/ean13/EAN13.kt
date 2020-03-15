@@ -1,6 +1,14 @@
 package se.vbgt.ean13
 
-import java.lang.IllegalArgumentException
+import java.awt.Color.BLACK
+import java.awt.Color.WHITE
+import java.awt.Font
+import java.awt.Font.PLAIN
+import java.awt.Graphics2D
+import java.awt.image.BufferedImage
+import java.awt.image.BufferedImage.TYPE_BYTE_BINARY
+import java.io.File
+import javax.imageio.ImageIO
 
 class EAN13(number: String) {
 
@@ -18,7 +26,7 @@ class EAN13(number: String) {
     }
 
     fun groups(): String =
-        // The first digit determines the group of the next six digits
+    // The first digit determines the group of the next six digits
         // The last six digits always have group R
         when (theNumber.first()) {
             '0' -> "LLLLLLRRRRRR"
@@ -61,7 +69,6 @@ class EAN13(number: String) {
                 // To lazy to manually replace 1 with | and 0 with space from the copy-pasted data from Wikipedia
             }.replace('1', '|').replace('0', ' ')
 
-
         private fun mapModuleR(digit: Char): String =
             when (digit) {
                 '0' -> "1110010"
@@ -77,7 +84,6 @@ class EAN13(number: String) {
                 else -> throw IllegalArgumentException("Not a digit")
             }
 
-
         private fun mapModuleG(digit: Char): String =
             when (digit) {
                 '0' -> "0100111"
@@ -92,7 +98,6 @@ class EAN13(number: String) {
                 '9' -> "0010111"
                 else -> throw IllegalArgumentException("Not a digit")
             }
-
 
         private fun mapModuleL(digit: Char): String =
             when (digit) {
@@ -123,5 +128,64 @@ class EAN13(number: String) {
             c - '0'
         }
 
-    fun saveImageTo(path: String): Unit = TODO("Bonus")
+    fun saveImageTo(path: String) {
+        val image = createImage()
+        val outputFile = File(path)
+        ImageIO.write(image, "png", outputFile)
+    }
+
+    private fun createImage(): BufferedImage {
+        val width = 230
+        val height = 180
+
+        val image = BufferedImage(width, height, TYPE_BYTE_BINARY)
+        val graphics2D = prepareGraphics2D(image, width, height)
+
+        drawModules(graphics2D)
+        drawNumbers(graphics2D)
+
+        return image
+    }
+
+    private fun drawNumbers(graphics2D: Graphics2D) {
+        theNumber.forEachIndexed { i: Int, c: Char ->
+            val x = when (i) {
+                0 -> 9
+                in 1..6 -> 15 + i * 14
+                in 7..12 -> 23 + i * 14
+
+                else -> throw IllegalArgumentException("Outside range")
+            }
+            graphics2D.drawString(c.toString(), x, 104)
+        }
+    }
+
+    private fun drawModules(graphics2D: Graphics2D) {
+        modules().forEachIndexed { i: Int, c: Char ->
+            if (c == '|') {
+                val h = when (i) {
+                    in 0..2 -> 80
+                    in 46..48 -> 80
+                    in 92..94 -> 80
+
+                    else -> throw IllegalArgumentException("Outside range")
+                }
+                val x = 20 + i * 2
+                graphics2D.fillRect(x, 20, 2, h)
+            }
+        }
+    }
+
+    private fun prepareGraphics2D(image: BufferedImage, width: Int, height: Int): Graphics2D {
+        val graphics2D = image.createGraphics()
+        graphics2D.background = WHITE
+        graphics2D.clearRect(0, 0, width, height)
+        graphics2D.color = BLACK
+        graphics2D.font = Font("TimesRoman", PLAIN, 16)
+        return graphics2D
+    }
+}
+
+fun main() {
+    EAN13("1234567890128").saveImageTo("123.png")
 }
