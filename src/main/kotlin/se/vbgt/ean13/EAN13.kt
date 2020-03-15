@@ -26,7 +26,7 @@ class EAN13(number: String) {
     }
 
     fun groups(): String =
-    // The first digit determines the group of the next six digits
+        // The first digit determines the group of the next six digits
         // The last six digits always have group R
         when (theNumber.first()) {
             '0' -> "LLLLLLRRRRRR"
@@ -136,7 +136,7 @@ class EAN13(number: String) {
 
     private fun createImage(): BufferedImage {
         val width = 230
-        val height = 180
+        val height = 120
 
         val image = BufferedImage(width, height, TYPE_BYTE_BINARY)
         val graphics2D = prepareGraphics2D(image, width, height)
@@ -168,7 +168,7 @@ class EAN13(number: String) {
                     in 46..48 -> 80
                     in 92..94 -> 80
 
-                    else -> throw IllegalArgumentException("Outside range")
+                    else -> 70
                 }
                 val x = 20 + i * 2
                 graphics2D.fillRect(x, 20, 2, h)
