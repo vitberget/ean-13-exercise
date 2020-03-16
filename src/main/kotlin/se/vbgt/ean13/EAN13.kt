@@ -21,12 +21,11 @@ class EAN13(number: String) {
     init {
         // validate length and check digit
         require(theNumber.length == 13) { "Bad length" }
-        val checkDigit = checkDigit(theNumber.take(12))
-        require(checkDigit == theNumber.last()) { "Bad check digit" }
+        require(checkDigit(theNumber.take(12)) == theNumber.last()) { "Bad check digit" }
     }
 
     fun groups(): String =
-        // The first digit determines the group of the next six digits
+    // The first digit determines the group of the next six digits
         // The last six digits always have group R
         when (theNumber.first()) {
             '0' -> "LLLLLLRRRRRR"
@@ -84,35 +83,16 @@ class EAN13(number: String) {
                 else -> throw IllegalArgumentException("Not a digit")
             }
 
-        private fun mapModuleG(digit: Char): String =
-            when (digit) {
-                '0' -> "0100111"
-                '1' -> "0110011"
-                '2' -> "0011011"
-                '3' -> "0100001"
-                '4' -> "0011101"
-                '5' -> "0111001"
-                '6' -> "0000101"
-                '7' -> "0010001"
-                '8' -> "0001001"
-                '9' -> "0010111"
-                else -> throw IllegalArgumentException("Not a digit")
-            }
+        private fun mapModuleG(digit: Char): String = mapModuleR(digit).reversed()
 
         private fun mapModuleL(digit: Char): String =
-            when (digit) {
-                '0' -> "0001101"
-                '1' -> "0011001"
-                '2' -> "0010011"
-                '3' -> "0111101"
-                '4' -> "0100011"
-                '5' -> "0110001"
-                '6' -> "0101111"
-                '7' -> "0111011"
-                '8' -> "0110111"
-                '9' -> "0001011"
-                else -> throw IllegalArgumentException("Not a digit")
-            }
+            mapModuleR(digit).map {
+                when (it) {
+                    '1' -> '0'
+                    '0' -> '1'
+                    else -> throw IllegalArgumentException("Not a binary digit")
+                }
+            }.joinToString("")
     }
 
     fun checkDigit(value: String): Char = '0' + (10 - value.reversed()
@@ -164,9 +144,9 @@ class EAN13(number: String) {
         modules().forEachIndexed { i: Int, c: Char ->
             if (c == '|') {
                 val h = when (i) {
-                    in 0..2 -> 80
-                    in 46..48 -> 80
-                    in 92..94 -> 80
+                    in 0..2 -> 80   // start marker
+                    in 45..49 -> 80 // middle marker
+                    in 92..94 -> 80 // end marker
 
                     else -> 70
                 }
