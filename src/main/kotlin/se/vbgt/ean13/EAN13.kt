@@ -47,12 +47,12 @@ class EAN13(number: String) {
         // The first digit determines the group of the next six digits
         val p1 = theNumber.drop(1).take(6)
             .mapIndexed { i: Int, c: Char -> mapModule(groups[i], c) }
-            .joinToString(separator = "")
+            .joinToString("")
 
         // The last six digits always have group R
         val p2 = theNumber.drop(7)
             .map { mapModule('R', it) }
-            .joinToString(separator = "")
+            .joinToString("")
 
         return "| |${p1} | | ${p2}| |"
     }
@@ -86,22 +86,27 @@ class EAN13(number: String) {
         private fun mapModuleG(digit: Char): String = mapModuleR(digit).reversed()
 
         private fun mapModuleL(digit: Char): String =
-            mapModuleR(digit).map {
-                when (it) {
-                    '1' -> '0'
-                    '0' -> '1'
-                    else -> throw IllegalArgumentException("Not a binary digit")
-                }
-            }.joinToString("")
+            mapModuleR(digit)
+                .map { xorBinaryDigitChar(it) }
+                .joinToString("")
+
+        private fun xorBinaryDigitChar(c: Char): Char =
+            when (c) {
+                '1' -> '0'
+                '0' -> '1'
+                else -> throw IllegalArgumentException("Not a binary digit")
+            }
     }
 
-    fun checkDigit(value: String): Char = '0' + (10 - value.reversed()
-        .mapIndexed { i, c -> checkDigitMultiplier(i, c) }
-        .sum()
-        .rem(10)
-            ).rem(10) // 10 - the remainder can become 10, so we do a remainder again to zero out 10
 
-    fun checkDigitMultiplier(i: Int, c: Char): Int =
+    private fun checkDigit(value: String): Char =
+        '0' + (10 - value.reversed()
+            .mapIndexed { i, c -> checkDigitMultiplier(i, c) }
+            .sum()
+            .rem(10)
+                ).rem(10) // 10 - the remainder can become 10, so we do a remainder again to zero out 10
+
+    private fun checkDigitMultiplier(i: Int, c: Char): Int =
         if (i % 2 == 0) {
             3 * (c - '0')
         } else {
@@ -127,33 +132,38 @@ class EAN13(number: String) {
         return image
     }
 
-    private fun drawNumbers(graphics2D: Graphics2D) {
-        theNumber.forEachIndexed { i: Int, c: Char ->
-            val x = when (i) {
-                0 -> 9
-                in 1..6 -> 15 + i * 14
-                in 7..12 -> 23 + i * 14
+    private fun drawNumbers(graphics2D: Graphics2D) =
+        theNumber.forEachIndexed { i: Int, c: Char -> drawNumber(i, c, graphics2D) }
 
-                else -> throw IllegalArgumentException("Outside range")
-            }
-            graphics2D.drawString(c.toString(), x, 104)
-        }
+    private fun drawNumber(index: Int, c: Char, graphics2D: Graphics2D) {
+        val x = when (index) {
+            0 -> 9
+            in 1..6 -> 15
+            in 7..12 -> 23
+            else -> throw IllegalArgumentException("Outside range")
+        } + index * 14
+
+        graphics2D.drawString(c.toString(), x, 104)
     }
 
     private fun drawModules(graphics2D: Graphics2D) {
         modules().forEachIndexed { i: Int, c: Char ->
             if (c == '|') {
-                val h = when (i) {
-                    in 0..2 -> 80   // start marker
-                    in 45..49 -> 80 // middle marker
-                    in 92..94 -> 80 // end marker
-
-                    else -> 70
-                }
-                val x = 20 + i * 2
-                graphics2D.fillRect(x, 20, 2, h)
+                drawModule(i, graphics2D)
             }
         }
+    }
+
+    private fun drawModule(i: Int, graphics2D: Graphics2D) {
+        val h = when (i) {
+            in 0..2 -> 80   // start marker
+            in 45..49 -> 80 // middle marker
+            in 92..94 -> 80 // end marker
+
+            else -> 70
+        }
+        val x = 20 + i * 2
+        graphics2D.fillRect(x, 20, 2, h)
     }
 
     private fun prepareGraphics2D(image: BufferedImage, width: Int, height: Int): Graphics2D {
