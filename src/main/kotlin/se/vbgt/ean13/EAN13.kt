@@ -45,16 +45,16 @@ class EAN13(number: String) {
         val groups = groups()
 
         // The first digit determines the group of the next six digits
-        val p1 = theNumber.drop(1).take(6)
+        val part1 = theNumber.drop(1).take(6)
             .mapIndexed { i: Int, c: Char -> mapModule(groups[i], c) }
             .joinToString("")
 
         // The last six digits always have group R
-        val p2 = theNumber.drop(7)
+        val part2 = theNumber.drop(7)
             .map { mapModule('R', it) }
             .joinToString("")
 
-        return "| |${p1} | | ${p2}| |"
+        return "| |${part1} | | ${part2}| |"
     }
 
     companion object {
@@ -87,10 +87,10 @@ class EAN13(number: String) {
 
         private fun mapModuleL(digit: Char): String =
             mapModuleR(digit)
-                .map { xorBinaryDigitChar(it) }
+                .map { invertBinaryDigitChar(it) }
                 .joinToString("")
 
-        private fun xorBinaryDigitChar(c: Char): Char =
+        private fun invertBinaryDigitChar(c: Char): Char =
             when (c) {
                 '1' -> '0'
                 '0' -> '1'
@@ -155,7 +155,7 @@ class EAN13(number: String) {
     }
 
     private fun drawModule(i: Int, graphics2D: Graphics2D) {
-        val h = when (i) {
+        val height = when (i) {
             in 0..2 -> 80   // start marker
             in 45..49 -> 80 // middle marker
             in 92..94 -> 80 // end marker
@@ -163,7 +163,7 @@ class EAN13(number: String) {
             else -> 70
         }
         val x = 20 + i * 2
-        graphics2D.fillRect(x, 20, 2, h)
+        graphics2D.fillRect(x, 20, 2, height)
     }
 
     private fun prepareGraphics2D(image: BufferedImage, width: Int, height: Int): Graphics2D {
