@@ -115,9 +115,11 @@ class EAN13(number: String) {
         (c - '0') * if (i.isEven()) 3 else 1
 
     fun saveImageTo(path: String) {
-        val image = createImage()
-        val outputFile = File(path)
-        ImageIO.write(image, "png", outputFile)
+        ImageIO.write(
+            createImage(),
+            "png",
+            File(path)
+        )
     }
 
     private fun createImage(): BufferedImage {
@@ -166,14 +168,14 @@ class EAN13(number: String) {
         graphics2D.fillRect(x, 20, 2, height)
     }
 
-    private fun prepareGraphics2D(image: BufferedImage, width: Int, height: Int): Graphics2D {
-        val graphics2D = image.createGraphics()
-        graphics2D.background = WHITE
-        graphics2D.clearRect(0, 0, width, height)
-        graphics2D.color = BLACK
-        graphics2D.font = Font("TimesRoman", PLAIN, 16)
-        return graphics2D
-    }
+    private fun prepareGraphics2D(image: BufferedImage, width: Int, height: Int): Graphics2D =
+        image.createGraphics().apply {
+            background = WHITE
+            color = BLACK
+            font = Font("TimesRoman", PLAIN, 16)
+
+            clearRect(0, 0, width, height)
+        }
 }
 
 private fun Int.isEven(): Boolean = this % 2 == 0
