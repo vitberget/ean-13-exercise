@@ -99,19 +99,20 @@ class EAN13(number: String) {
     }
 
 
-    private fun checkDigit(value: String): Char =
-        '0' + (10 - value.reversed()
+    private fun checkDigit(value: String): Char {
+        val inverseMod10 = value.reversed()
             .mapIndexed { i, c -> checkDigitMultiplier(i, c) }
             .sum()
             .rem(10)
-                ).rem(10) // 10 - the remainder can become 10, so we do a remainder again to zero out 10
+
+        // 10 - the remainder can become 10, so we do a remainder again to zero out 10
+        val mod10 = (10 - inverseMod10).rem(10)
+
+        return '0' + mod10
+    }
 
     private fun checkDigitMultiplier(i: Int, c: Char): Int =
-        if (i % 2 == 0) {
-            3 * (c - '0')
-        } else {
-            c - '0'
-        }
+        (c - '0') * if (i.isEven()) 3 else 1
 
     fun saveImageTo(path: String) {
         val image = createImage()
@@ -136,21 +137,20 @@ class EAN13(number: String) {
         theNumber.forEachIndexed { i: Int, c: Char -> drawNumber(i, c, graphics2D) }
 
     private fun drawNumber(index: Int, c: Char, graphics2D: Graphics2D) {
-        val x = when (index) {
-            0 -> 9
-            in 1..6 -> 15
-            in 7..12 -> 23
-            else -> throw IllegalArgumentException("Outside range")
-        } + index * 14
+        val x = index * 14 +
+                when (index) {
+                    0 -> 9
+                    in 1..6 -> 15
+                    in 7..12 -> 23
+                    else -> throw IllegalArgumentException("Outside range")
+                }
 
         graphics2D.drawString(c.toString(), x, 104)
     }
 
     private fun drawModules(graphics2D: Graphics2D) {
         modules().forEachIndexed { i: Int, c: Char ->
-            if (c == '|') {
-                drawModule(i, graphics2D)
-            }
+            if (c == '|') drawModule(i, graphics2D)
         }
     }
 
@@ -175,6 +175,8 @@ class EAN13(number: String) {
         return graphics2D
     }
 }
+
+private fun Int.isEven(): Boolean = this % 2 == 0
 
 fun main() {
     EAN13("1234567890128").saveImageTo("123.png")
